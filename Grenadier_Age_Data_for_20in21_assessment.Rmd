@@ -1,0 +1,299 @@
+---
+title: "Data for the 2021 Blue Grenadier assessment sent to Patrick Cordue"
+author: "Paul Burch"
+date: "17 June 2021"
+output: 
+  html_document:
+      toc: TRUE
+      toc_float: TRUE
+      code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+**This version updates an earlier version with revised age data received from Josh@FAS on 16 June 2021**
+
+This document extracts the Pink Ling age data for Patrick Cordue and compares it
+to the data provided to Patrick in 2018.
+
+# Preliminaries
+
+Set default options
+
+```{r}
+options(stringsAsFactors = FALSE)
+```
+
+Sometimes it's necessary to set a working directory
+
+```{r, eval=FALSE}
+# setwd("C:/Work/2020/Projects/Data_services_19in20/sessfdatascripts/Data_ALLspp")
+```
+
+Load the packages used in the analysis.  
+
+```{r}
+library(SESSFdataproc)
+library(SESSFlookups)
+library(SESSFmaps)
+library(SESSFutils)
+```
+
+Get today's date to add to file names of any outputs
+
+```{r}
+(date_today <- format(Sys.Date(), "%Y-%m-%d"))
+```
+
+Examine the control lookup table to 
+
+```{r}
+data("controlLU_2021_06")
+controlLU <- controlLU_2021_06
+```
+
+# Checks of the Grenadier Ages
+
+Checks and comparisons of the two age data sets
+
+## 2019 Age data
+
+Previous years data brought in from the datapackage 'SESSFdata2019in2020' 
+```{r}
+library(SESSFdata2019in2020)
+data(Age19in20)
+```
+
+make a subset for Grenadier
+```{r}
+dold <- dage[dage$GroupCode %in% "GRE",]
+``` 
+
+
+Examine the data
+
+```{r}
+str(dold)
+```
+
+Examine the AgeZone field
+
+```{r}
+(tbl_zone_dold <- with(dold, table(Year, AgeZone, useNA="always")))
+```
+
+Examine the Gear field
+
+```{r}
+(tbl_gear_dold <- with(dold, table(Year, Gear, useNA="always")))
+```
+
+Examine the LenCode
+
+```{r}
+(tbl_len_old <- with(dold, table(Year, LenCode, useNA="always")))
+```
+
+## 2021 Age data
+
+Load the CSV created from the spreadsheet  
+
+```{r}
+sp_age20in21 <- read.csv("../SESSFdata2020in2021/Data_RAW/Fish_Ageing_Services/Blue Gren Age Update 2021_2021-06-21.csv", header=TRUE)
+```
+
+Examine the data
+
+```{r}
+str(sp_age20in21)
+```
+
+Examine the Zone field by Year
+
+```{r}
+(tbl_zone_20in21 <- with(sp_age20in21, table(Year, Zone, useNA="always")))
+```
+
+Examine the Gear field by Year
+
+```{r}
+(tbl_gear_20in21 <- with(sp_age20in21, table(Year, Gear, useNA="always")))
+```
+
+Examine the LenCode
+
+```{r}
+(tbl_len_20in21 <- with(sp_age20in21, table(Year, LenCode, useNA="always")))
+```
+
+## Comparison of Data 
+
+Compare the number of fish aged by year
+
+```{r}
+(age_diffs <- CompareCounts(sp_age15in18$Year, sp_age20in21$Year))
+```
+
+Save this as a csv file
+
+```{r}
+write.csv(age_diffs, "age_diffs.csv", row.names=FALSE)
+```
+
+
+Compare the zones available in the two years
+
+The 15in18 data
+
+```{r}
+with(sp_age15in18, table(AgeZone, useNA="always"))
+```
+
+The 20in21 data
+
+```{r}
+with(sp_age20in21, table(Zone, useNA="always"))
+```
+
+Compare the gear codes
+
+The 15in18 data
+
+```{r}
+with(sp_age15in18, table(Gear, useNA="always"))
+```
+
+The 20in21 data
+
+```{r}
+with(sp_age20in21, table(Gear, useNA="always"))
+```
+
+Compare the length codes
+
+The 15in18 data
+
+```{r}
+with(sp_age15in18, table(LenCode, useNA="always"))
+```
+
+The 20in21 data
+
+```{r}
+with(sp_age20in21, table(LenCode, useNA="always"))
+```
+
+Write a loop to compare age at length by year
+
+Specify the years to plot
+
+```{r}
+(yrs <- sort(unique(sp_age15in18$Year)))
+```
+
+**Probably should convert the length types to the reference length for Pink Ling**
+
+```{r}
+#opar <- par(mfrow=c(length(yrs),2))
+
+for(i in yrs){
+  ## set graphical parameters
+  opar <- par(mfrow=c(1,2))
+  
+  ## create the two length plots for 
+  plot(Length ~ Age1, data=sp_age15in18[sp_age15in18$Age1 >0 & sp_age15in18$Length >0 & sp_age15in18$Year %in% i,], main= paste0("Data from 2018 in ", i))
+  plot(FloorLength ~ Age1, data=sp_age20in21[sp_age20in21$Age1 >0 & sp_age20in21$FloorLength >0  & sp_age20in21$Year %in% i,], main= paste0("Data from 2021 in ", i))
+
+  ## reset graphical ps
+  par(opar)
+  
+}
+
+#par(opar)
+
+```
+
+# Summary
+
+Fish Ageing Services made a number of corrections to their database in 2019. A 
+description of the changes and the queries of these changes is provided in the 
+email chain below.
+
+**Email from Paul Burch to Simon@FAS 15 June 2021**
+
+Hi Simon,
+
+I'm preparing the Pink Ling age data for Patrick Cordue who has been doing the Ling assessment the past few times and I just wanted to check that some changes in the data that were probably made in 2019 or 2020 are correct. 
+
+There have been a large number of changes in the numbers of Pink Ling otoliths read between 1993 and 2008 and I just wanted to check that these changes were correct before sending the data to Patrick.
+
+see table to the right
+
+Apologies if we've asked about Ling last year or in 2019 but I could only find emails for other species.
+
+Cheers,
+Paul
+
+**email below from Josh@FAS 15 June 2021 in response to a query in changes in Pink Ling age data**
+
+Hi Paul, 
+
+Simon asked me to have a look through the discrepancies in the Ling ageing data between 1993 and 2008. The differences stem from a major database update that occurred a few years ago so that we could include a few extra fields. Including the day of capture became problematic, as dates can vary within batches. 
+
+The vast majority of these discrepancies were updates relating to issues with DOCs, most of which are correct. There were also a few batches (e.g. 256 and 257) where there were some double records that were correctly removed from the DB. 
+The only records that were incorrectly updated were from 1993/94, where a number of individuals in a batch had DOCs from different years. I have updated those records. The remaining data post 2008 seem correct, and I have attached the updated data here.
+
+Finally, I have begun going through the same process with blue grens to make sure any discrepancies are correct. My initial look at these suggest that there are a few records that seem problematic. I will get on this tomorrow - along with finalising the age error data also. 
+
+Cheers, 
+Josh
+
+**email Paul Burch to Josh@FAS 16 June 2021**
+
+Hi Josh,
+
+Just a couple of queries
+
+There are 26 records without a Year (rows 28785 - 28810)
+
+There's 346 records without a Zone, they appear to come from a number of different trips, some are quite recent but not sure if you can do anything 
+
+There are 71 records that have a length code (LenCode) but don't have a length, again not sure you can do anything.
+
+Thanks again for looking at these
+
+Cheers,
+Paul
+
+
+**There was a followup email from Josh@FAS with corrected data on 16 June 2021**
+
+Hi Paul, 
+
+No worries! 
+
+- The 26 records unfortunately didn't have any DOC data and couldn't be matched up with the other SIDaC data to get a DOC. We do think that they are 2019 - but can't be sure of that (and completely unsure of day/month).
+
+- Unfortunately, most of these did not have any zone data. We did have the data for some of them 
+- which I've updated. There are now 210 records with no zone data.
+
+- Missing lengths - there isn't much I can do about most of these unfortunately. I've filled in any blanks that I could find. Some of these, the length data just wasn't there, so the LenCat shouldn't have been there either. Others were part of a batch where length data were there for all individuals except one or two - so i assume it was a drag down issue. 
+
+I've attached the updated data here. 
+
+Let me know if there are any other issues. 
+Josh
+
+
+# Session information
+
+Print the session information
+
+```{r}
+sessionInfo()
+```
+
